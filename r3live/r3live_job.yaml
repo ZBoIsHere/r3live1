@@ -1,0 +1,41 @@
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: mappingjob
+  namespace: roboartisan
+  labels:
+    app: mappingjob
+    job-name: mappingjob
+    version: v1
+spec:
+  parallelism: 1
+  completions: 1
+  activeDeadlineSeconds: 600
+  backoffLimit: 5
+  template:
+    metadata:
+      name: mappingjob
+      labels:
+        app: mappingjob
+        job-name: mappingjob
+        version: v1
+    spec:
+      volumes:
+        - name: cce-obs-roboartisan
+          persistentVolumeClaim:
+            claimName: cce-obs-roboartisan
+      containers:
+        - name: mappingworker
+          image: swr.cn-south-1.myhuaweicloud.com/zhangbo/mappingworker:v5
+          env:
+            - name: ROSBAG_PATH
+              value: /root/roboartisan/rosbag
+            - name: CLOUD_MAP_PATH
+              value: /root/roboartisan/map
+          volumeMounts:
+            - name: cce-obs-roboartisan
+              mountPath: /root/roboartisan
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+      restartPolicy: OnFailure

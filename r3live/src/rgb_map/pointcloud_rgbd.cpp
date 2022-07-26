@@ -660,3 +660,42 @@ void Global_map::save_and_display_pointcloud(std::string dir_name, std::string f
     cout << "========================================================" << endl;
     system(std::string("pcl_viewer ").append(dir_name).append("/rgb_pt.pcd").c_str());
 }
+
+pcl::PointCloud<pcl::PointXYZRGB> Global_map::pub_colored_pointcloud() {
+    auto save_pts_with_views = 3;
+    Common_tools::Timer tim;
+    scope_color(ANSI_COLOR_BLUE_BOLD);
+    cout << "pub Rgb points" << endl;
+    fflush(stdout);
+    pcl::PointCloud<pcl::PointXYZRGB> pc_rgb;
+    long pt_size = m_rgb_pts_vec.size();
+    pc_rgb.resize(pt_size);
+    long pt_count = 0;
+    for (long i = pt_size - 1; i > 0; i--)
+        //for (int i = 0; i  <  pt_size; i++)
+    {
+        if ( i % 1000 == 0)
+        {
+            cout << ANSI_DELETE_CURRENT_LINE << "Saving offline map " << (int)( (pt_size- 1 -i ) * 100.0 / (pt_size-1) ) << " % ...";
+            fflush(stdout);
+        }
+
+        if (m_rgb_pts_vec[i]->m_N_rgb < save_pts_with_views)
+        {
+            continue;
+        }
+        pcl::PointXYZRGB pt;
+        pc_rgb.points[ pt_count ].x = m_rgb_pts_vec[ i ]->m_pos[ 0 ];
+        pc_rgb.points[ pt_count ].y = m_rgb_pts_vec[ i ]->m_pos[ 1 ];
+        pc_rgb.points[ pt_count ].z = m_rgb_pts_vec[ i ]->m_pos[ 2 ];
+        pc_rgb.points[ pt_count ].r = m_rgb_pts_vec[ i ]->m_rgb[ 2 ];
+        pc_rgb.points[ pt_count ].g = m_rgb_pts_vec[ i ]->m_rgb[ 1 ];
+        pc_rgb.points[ pt_count ].b = m_rgb_pts_vec[ i ]->m_rgb[ 0 ];
+        pt_count++;
+    }
+    cout << ANSI_DELETE_CURRENT_LINE  << "Saving offline map 100% ..." << endl;
+    pc_rgb.resize(pt_count);
+    cout << "Total have " << pt_count << " points." << endl;
+    tim.tic();
+    return pc_rgb;
+}

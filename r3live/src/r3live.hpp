@@ -73,6 +73,7 @@ Dr. Fu Zhang < fuzhang@hku.hk >.
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 #include "std_msgs/String.h"
+#include "mapping_adapter.hpp"
 
 #include <geometry_msgs/Vector3.h>
 #include <FOV_Checker/FOV_Checker.h>
@@ -125,7 +126,7 @@ void dump_lio_state_to_log(FILE *fp);
 
 extern Common_tools::Cost_time_logger g_cost_time_logger;
 extern std::shared_ptr<Common_tools::ThreadPool> m_thread_pool_ptr;
-class R3LIVE
+class R3LIVE : public MappingAdapter
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -454,4 +455,7 @@ public:
     int service_LIO_update();
     void publish_render_pts( ros::Publisher &pts_pub, Global_map &m_map_rgb_pts );
     void print_dash_board();
+
+    void rawdataFinishedCallback(const std_msgs::String::ConstPtr &msg);
+    void registerRawdataFinishedCallbackFunc();
 };
