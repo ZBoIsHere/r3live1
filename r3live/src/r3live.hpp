@@ -72,6 +72,7 @@ Dr. Fu Zhang < fuzhang@hku.hk >.
 #include <sensor_msgs/PointCloud2.h>
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
+#include "std_msgs/String.h"
 
 #include <geometry_msgs/Vector3.h>
 #include <FOV_Checker/FOV_Checker.h>
@@ -205,6 +206,7 @@ public:
     ros::Subscriber sub_pcl;
     ros::Subscriber sub_imu;
     ros::Subscriber sub_img, sub_img_comp;
+    ros::Subscriber sub_bag;
 
     ros::Publisher pub_track_img, pub_raw_img;
     ros::Publisher pub_odom_cam, pub_path_cam;
@@ -279,6 +281,7 @@ public:
     int esikf_iter_times = 2;
     std::vector<std::shared_ptr<RGB_pts>> m_last_added_rgb_pts_vec;
     std::string m_map_output_dir;
+    std::string cloud_map_output_dir;
     std::shared_ptr<std::shared_future<void> > m_render_thread = nullptr;
     
     // VIO subsystem related
@@ -292,6 +295,7 @@ public:
     void process_image(cv::Mat & image, double msg_time);
     void image_callback(const sensor_msgs::ImageConstPtr &msg);
     void image_comp_callback(const sensor_msgs::CompressedImageConstPtr &msg);
+    void rosbag_done_callback(const std_msgs::String &msg);
     void set_image_pose( std::shared_ptr<Image_frame> & image_pose, const StatesGroup & state );
     void publish_camera_odom(std::shared_ptr<Image_frame> & image, double msg_time);
     void publish_track_img(cv::Mat & img, double frame_cost_time);
@@ -326,12 +330,14 @@ public:
 
         pub_odom_cam = m_ros_node_handle.advertise<nav_msgs::Odometry>("/camera_odom", 10);
         pub_path_cam = m_ros_node_handle.advertise<nav_msgs::Path>("/camera_path", 10);
-        std::string LiDAR_pointcloud_topic, IMU_topic, IMAGE_topic, IMAGE_topic_compressed;
+        std::string LiDAR_pointcloud_topic, IMU_topic, IMAGE_topic, IMAGE_topic_compressed, ROSBAG_DONE_topic;
 
         get_ros_parameter<std::string>(m_ros_node_handle, "/LiDAR_pointcloud_topic", LiDAR_pointcloud_topic, std::string("/laser_cloud_flat") );
         get_ros_parameter<std::string>(m_ros_node_handle, "/IMU_topic", IMU_topic, std::string("/livox/imu") );
         get_ros_parameter<std::string>(m_ros_node_handle, "/Image_topic", IMAGE_topic, std::string("/camera/image_color") );
         IMAGE_topic_compressed = std::string(IMAGE_topic).append("/compressed");
+        ROSBAG_DONE_topic = std::string("/rosbag_done");
+        cloud_map_output_dir = std::string("/root/rosbag");
         if(1)
         {
             scope_color(ANSI_COLOR_BLUE_BOLD);
@@ -348,6 +354,7 @@ public:
         sub_pcl = m_ros_node_handle.subscribe(LiDAR_pointcloud_topic.c_str(), 2000000, &R3LIVE::feat_points_cbk, this, ros::TransportHints().tcpNoDelay());
         sub_img = m_ros_node_handle.subscribe(IMAGE_topic.c_str(), 1000000, &R3LIVE::image_callback, this, ros::TransportHints().tcpNoDelay());
         sub_img_comp = m_ros_node_handle.subscribe(IMAGE_topic_compressed.c_str(), 1000000, &R3LIVE::image_comp_callback, this, ros::TransportHints().tcpNoDelay());
+        sub_bag = m_ros_node_handle.subscribe(ROSBAG_DONE_topic.c_str(), 1000000, &R3LIVE::rosbag_done_callback, this, ros::TransportHints().tcpNoDelay());
 
         m_ros_node_handle.getParam("/initial_pose", m_initial_pose);
         m_pub_rgb_render_pointcloud_ptr_vec.resize(1e3);

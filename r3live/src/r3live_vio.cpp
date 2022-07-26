@@ -49,6 +49,7 @@ Dr. Fu Zhang < fuzhang@hku.hk >.
 // #include "photometric_error.hpp"
 #include "tools_mem_used.h"
 #include "tools_logger.hpp"
+#include "std_msgs/String.h"
 
 Common_tools::Cost_time_logger              g_cost_time_logger;
 std::shared_ptr< Common_tools::ThreadPool > m_thread_pool_ptr;
@@ -335,6 +336,17 @@ void R3LIVE::image_comp_callback( const sensor_msgs::CompressedImageConstPtr &ms
         g_flag_if_first_rec_img = 0;
         m_thread_pool_ptr->commit_task( &R3LIVE::service_process_img_buffer, this );
     }
+    return;
+}
+
+void R3LIVE::rosbag_done_callback(const std_msgs::String &msg) {
+    char *cloud_map_path;
+    cloud_map_path = getenv("CLOUD_MAP_PATH");
+    scope_color( ANSI_COLOR_GREEN_BOLD );
+    cout << "I capture the keyboard input!!!" << endl;
+    m_mvs_recorder.export_to_mvs( m_map_rgb_pts );
+    // m_map_rgb_pts.save_and_display_pointcloud( m_map_output_dir, std::string("/rgb_pt"), std::max(m_pub_pt_minimum_views, 5) );
+    m_map_rgb_pts.save_and_display_pointcloud(std::string(cloud_map_path), std::string("/rgb_pt"), m_pub_pt_minimum_views  );
     return;
 }
 
@@ -1069,6 +1081,7 @@ void R3LIVE::publish_render_pts( ros::Publisher &pts_pub, Global_map &m_map_rgb_
     pts_pub.publish( ros_pc_msg );
 }
 
+// todo zhangbo
 char R3LIVE::cv_keyboard_callback()
 {
     char c = cv_wait_key( 1 );
@@ -1092,7 +1105,7 @@ void R3LIVE::service_VIO_update()
     op_track.m_maximum_vio_tracked_pts = m_maximum_vio_tracked_pts;
     m_map_rgb_pts.m_minimum_depth_for_projection = m_tracker_minimum_depth;
     m_map_rgb_pts.m_maximum_depth_for_projection = m_tracker_maximum_depth;
-    cv::imshow( "Control panel", generate_control_panel_img().clone() );
+    //cv::imshow( "Control panel", generate_control_panel_img().clone() );
     Common_tools::Timer tim;
     cv::Mat             img_get;
     while ( ros::ok() )
