@@ -99,7 +99,7 @@ if(Ceres_FOUND)
 endif()
 add_executable(test_timer src/tools/test_timer.cpp)
 
-add_executable(r3live_mapping src/r3live.cpp 
+add_executable(r3live_mapping src/r3live.cpp
                 src/r3live_lio.cpp
                 src/loam/include/kd_tree/ikd_Tree.cpp
                 src/loam/include/FOV_Checker/FOV_Checker.cpp 
@@ -111,10 +111,9 @@ add_executable(r3live_mapping src/r3live.cpp
                 src/rgb_map/rgbmap_tracker.cpp
                 src/rgb_map/image_frame.cpp
                 src/rgb_map/pointcloud_rgbd.cpp
-				src/mapping_adapter.cpp
 				src/r3live_adapter.cpp
               )
-target_link_libraries(r3live_mapping 
+target_link_libraries(r3live_mapping
                           ${catkin_LIBRARIES}
                           ${Boost_LIBRARIES}
                           ${Boost_FILESYSTEM_LIBRARY}
@@ -122,7 +121,14 @@ target_link_libraries(r3live_mapping
                           ${OpenCV_LIBRARIES}
                           # ${OpenMVS_LIBRARIES}
                           pcl_common 
-                          pcl_io) 
+                          pcl_io
+						  mappingadapter
+		)
+
+add_subdirectory(thirdparty/mappingadapter)
+include_directories(
+		${PROJECT_SOURCE_DIR}/thirdparty/mappingadapter/include
+)
 
 FIND_PACKAGE(CGAL REQUIRED)
 if(CGAL_FOUND)
