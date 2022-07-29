@@ -36,16 +36,15 @@ RUN apt install -y ros-melodic-rviz
 VOLUME ["~/rosbag"]
 RUN touch ~/start.sh && chmod 755 ~/start.sh && echo "service xrdp start" >> ~/start.sh && echo "source ~/.bashrc"  >> ~/start.sh
 RUN echo -e "source /opt/ros/melodic/setup.bash \n source ~/ws_livox/devel/setup.bash \n source ~/catkin_ws/devel/setup.bash" >> ~/start.sh
-RUN echo "nohup roslaunch r3live r3live_bag.launch & " >> ~/start.sh && echo "rosbag play \$RAWDATAFILE" >> ~/start.sh 
-RUN echo 'rostopic pub -1 /rosbag_done std_msgs/String "rosbagplaydone"' >> ~/start.sh
-
+RUN echo "roslaunch r3live r3live_bag.launch" >> ~/start.sh
 
 RUN apt install at-spi2-core
 RUN mkdir -p ~/catkin_ws/src
-RUN cd ~/catkin_ws/src && git clone https://github.com/ZBoIsHere/r3live.git && cd
+RUN echo "hello world 1"
+RUN cd ~/catkin_ws/src && git clone https://github.com/roboartisan-term/r3live.git && git clone https://github.com/roboartisan-term/mappingproxy.git
+RUN mkdir -p ~/catkin_ws/src/r3live/r3live/thirdparty/ && cd ~/catkin_ws/src/r3live/r3live/thirdparty/ && git clone https://github.com/roboartisan-term/mappingadapter.git
+
 RUN source /opt/ros/melodic/setup.bash && source ~/ws_livox/devel/setup.bash && cd ~/catkin_ws/ && catkin_make
 RUN echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
-RUN echo "sleep 30" >> ~/start.sh
-RUN echo "mv \$CLOUD_MAP_PATH/rgb_pt.pcd \$CLOUD_MAP_PATH/\$CLOUD_MAP_NAME"  >> ~/start.sh
 
 CMD ["bash", "-c", "~/start.sh"]
